@@ -11,7 +11,7 @@ import WalletView from "./components/WalletView";
 function App() {
   const [wallet, setWallet] = useState(null);
   const [seedPhrase, setSeedPhrase] = useState(null);
-  const [selectedChain, setSelectedChain] = useState("DEVNET");
+  const [selectedChain, setSelectedChain] = useState("devnet");
 
   return (
     <div className="App">
@@ -22,11 +22,11 @@ function App() {
           value={selectedChain}
           options={[
             {
-              label: "SOLANA MAINNET",
+              label: "mainnet",
               value: "mainnet",
             },
             {
-              label: "DEVNET",
+              label: "devnet",
               value: "devnet",
             },
           ]}

@@ -20,7 +20,6 @@ function RecoverAccount({ setWallet, setSeedPhrase }) {
   function recoverWallet() {
     let recoveredWallet;
     try {
-      // Decode the secret key from the base58 encoded string
       const secretKey = bs58.decode(typedSeed.trim());
       recoveredWallet = Keypair.fromSecretKey(secretKey);
     } catch (err) {

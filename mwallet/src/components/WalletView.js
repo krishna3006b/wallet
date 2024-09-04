@@ -14,10 +14,12 @@ import { useNavigate } from "react-router-dom";
 import logo from "../noImg.png";
 import axios from "axios";
 import { CHAINS_CONFIG } from "../chains";
-import { ethers } from "ethers";
-import { Connection, PublicKey, LAMPORTS_PER_SOL,SystemProgram, Transaction, Keypair, TransactionMessage, VersionedTransaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, SystemProgram, Transaction, Keypair, TransactionMessage, VersionedTransaction, sendAndConfirmTransaction } from '@solana/web3.js';
 import bs58 from "bs58";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSyncAlt } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { Modal } from "react-bootstrap";
 function WalletView({
   wallet,
   setWallet,
@@ -34,6 +36,15 @@ function WalletView({
   const [sendToAddress, setSendToAddress] = useState('DFfmB7PUQ2xdCto5XgWHSkCZGPUDsLTjXG5hgp8RQj39');
   const [processing, setProcessing] = useState(false);
   const [hash, setHash] = useState(null);
+
+
+  const [expandedTransaction, setExpandedTransaction] = useState(null); // State to track the expanded transaction
+
+  const transactionHistory = JSON.parse(localStorage.getItem(wallet)) || [];
+
+  const handleItemClick = (index) => {
+    setExpandedTransaction(expandedTransaction === index ? null : index);
+  };
 
 
   const items = [
@@ -69,16 +80,7 @@ function WalletView({
           ) : (
             <>
               <span>You seem to not have any tokens yet</span>
-              <p className="frontPageBottom">
-                Find Alt Coin Gems:{" "}
-                <a
-                  href="https://moralismoney.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  money.moralis.io
-                </a>
-              </p>
+
             </>
           )}
         </>
@@ -109,16 +111,6 @@ function WalletView({
           ) : (
             <>
               <span>You seem to not have any NFTs yet</span>
-              <p className="frontPageBottom">
-                Find Alt Coin Gems:{" "}
-                <a
-                  href="https://moralismoney.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  money.moralis.io
-                </a>
-              </p>
             </>
           )}
         </>
@@ -132,6 +124,11 @@ function WalletView({
           <h3>Native Balance </h3>
           <h1>
             {balance} {"SOL"}
+            <FontAwesomeIcon
+              icon={faSyncAlt}
+              style={{ marginLeft: "10px", cursor: "pointer", fontSize: "16px" }}
+              onClick={getAccountTokens}
+            />
           </h1>
           <div className="sendRow">
             <p style={{ width: "90px", textAlign: "left" }}> To:</p>
@@ -169,143 +166,102 @@ function WalletView({
         </>
       ),
     },
+    {
+      key: "0",
+      label: `History`,
+      children: (
+        <>
+          {transactionHistory.length > 0 ? (
+            <ul className="transaction-history-list">
+              {transactionHistory.map((tx, index) => (
+                <li key={index} className="transaction-history-item">
+                  <div
+                    onClick={() => handleItemClick(index)}
+                    className="transaction-summary"
+                  >
+                    <span>
+                      <FontAwesomeIcon
+                        icon={tx.type == "Received" ? faArrowDown : faArrowUp}
+                        className={tx.type == "Received" ? "received-icon" : "sent-icon"}
+                      />
+                    </span>
+                    <span>{tx.amount} SOL</span>
+                    <span>{tx.amount > 0 ? "Sent" : "Received"}</span>
+                  </div>
+
+                  {expandedTransaction === index && (
+                    <div className="transaction-details-dropdown">
+                      <p><strong>To Address:</strong> {tx.toAddress}</p>
+                      <p><strong>Transaction Hash:</strong> {tx.signature}</p>
+                      <p><strong>Date & Time:</strong> <br />{tx.dateTime}</p>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No transaction history available.</p>
+          )}
+        </>
+      ),
+    }
   ];
-
-  // async function sendTransaction(to, amount) {
-
-  //   const chain = CHAINS_CONFIG[selectedChain];
-
-  //   const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
-
-  //   const privateKey = ethers.Wallet.fromPhrase(seedPhrase).privateKey;
-
-  //   const wallet = new ethers.Wallet(privateKey, provider);
-
-  //   const tx = {
-  //     to: to,
-  //     value: ethers.parseEther(amount.toString()),
-  //   };
-
-  //   setProcessing(true);
-  //   try{
-  //     const transaction = await wallet.sendTransaction(tx);
-
-      // setHash(transaction.hash);
-      // const receipt = await transaction.wait();
-
-      // setHash(null);
-      // setProcessing(false);
-      // setAmountToSend(null);
-      // setSendToAddress(null);
-
-      // if (receipt.status === 1) {
-      //   getAccountTokens();
-      // } else {
-      //   console.log("failed");
-      // }
-
-
-  //   }catch(err){
-  //     setHash(null);
-  //     setProcessing(false);
-  //     setAmountToSend(null);
-  //     setSendToAddress(null);
-  //   }
-  // }
-  // async function sendTransaction(to, amount) {
-  //   const chain = CHAINS_CONFIG[selectedChain];
-  //   console.log(chain.rpcUrl);
-  //   const connection = new Connection(chain.rpcUrl, "confirmed");
-
-  //   const secretKeyString = "4Sit26HPw64y9pyiHYz4tfvUUE6d9VAG2Rgb9MoAnvUyHiWGKtr9wQepGVn5bnQeKaM4ruvkPwgqLBR2R2uvBnHi";
-  //   const secretKey = bs58.decode(secretKeyString);
-  //   const fromWallet = Keypair.fromSecretKey(secretKey);
-  //   const toPublicKey = new PublicKey(to);
-  //   const { blockhash } = await connection.getLatestBlockhash();
-  //   const transferInstruction = SystemProgram.transfer({
-  //     fromPubkey: fromWallet.publicKey,
-  //     toPubkey: toPublicKey,
-  //     lamports: amount * LAMPORTS_PER_SOL,
-  //   });
-  //   console.log(transferInstruction);
-  //   const transactionMessage = new TransactionMessage({
-  //     payerKey: fromWallet.publicKey,
-  //     recentBlockhash: blockhash,
-  //     instructions: [transferInstruction],
-  // });
-  
-  // console.log(transactionMessage);
-
-  // const versionedTransaction = new VersionedTransaction(transactionMessage.compileToV0Message());
-  //   setProcessing(true);
-  //   try {
-  //     const signature = await connection.sendTransaction(versionedTransaction, wallet);
-  
-  //     // Use getSignatureStatuses for confirmation, with timeout handling
-  //     const confirmationTimeout = 60 * 1000; // 60 seconds
-  //     const statuses = await Promise.race([
-  //       connection.getSignatureStatuses([signature]),
-  //       new Promise((resolve, reject) => {
-  //         setTimeout(() => {
-  //           reject(new Error('Transaction confirmation timed out'));
-  //         }, confirmationTimeout);
-  //       })
-  //     ]);
-  
-  //     const confirmedSignature = statuses.value[0];
-  
-  //     if (confirmedSignature.result.err !== null) {
-  //       // Handle transaction error
-  //       throw new Error(`Transaction failed: ${confirmedSignature.result.err}`);
-  //     } else {
-  //       setHash(confirmedSignature.signature); // Assuming signature is stored in 'hash'
-  //       setProcessing(false);
-  //       setAmountToSend(null);
-  //       setSendToAddress(null);
-  
-  //       getAccountTokens();
-  //     }
-  //   } catch (err) {
-  //     console.log("Transaction failed:", err);
-  //     setHash(null);
-  //     setProcessing(false);
-  //     setAmountToSend(null);
-  //     setSendToAddress(null);
-  //   }
-  // }
 
   async function sendTransaction(to, amount) {
     const chain = CHAINS_CONFIG[selectedChain];
     const connection = new Connection(chain.rpcUrl, "confirmed");
-    const secretKeyString = "4Sit26HPw64y9pyiHYz4tfvUUE6d9VAG2Rgb9MoAnvUyHiWGKtr9wQepGVn5bnQeKaM4ruvkPwgqLBR2R2uvBnHi";
+    const secretKeyString = localStorage.getItem("privatekey");
     const secretKey = bs58.decode(secretKeyString);
     const fromWallet = Keypair.fromSecretKey(secretKey);
     const toPublicKey = new PublicKey(to);
     const transaction = new Transaction().add(
       SystemProgram.transfer({
-        fromPubkey : fromWallet.publicKey,
-        toPubkey : toPublicKey,
-        lamports : amount*LAMPORTS_PER_SOL,
+        fromPubkey: fromWallet.publicKey,
+        toPubkey: toPublicKey,
+        lamports: amount * LAMPORTS_PER_SOL,
       })
     )
 
     setProcessing(true);
     try {
       const signature = await sendAndConfirmTransaction(connection, transaction, [fromWallet]);
-    
+
       setHash(signature);
       console.log("Transaction signature:", signature);
-    
+
+      function getCurrentDateTime() {
+        const currentDateTime = new Date();
+        const year = currentDateTime.getFullYear();
+        const month = String(currentDateTime.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const day = String(currentDateTime.getDate()).padStart(2, '0');
+        const hours = String(currentDateTime.getHours()).padStart(2, '0');
+        const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
+        const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
+        const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        return formattedDateTime;
+      }
+      const transactionData = {
+        amount: amountToSend,
+        signature: signature,
+        toAddress: sendToAddress,
+        token: "SOL",
+        type: "Sent",
+        dateTime: getCurrentDateTime(),
+      }
+      const walletAddress = wallet;
+      const existingTransactions = JSON.parse(localStorage.getItem(walletAddress)) || [];
+      existingTransactions.push(transactionData);
+      localStorage.setItem(walletAddress, JSON.stringify(existingTransactions));
+
       const { value: status } = await connection.getSignatureStatuses([signature]);
       const confirmedSignature = status[0];
-    
-      // Check if the transaction was confirmed
-      if (confirmedSignature && confirmedSignature.confirmationStatus === "finalized") {
+      console.log(confirmedSignature);
+      if (confirmedSignature.confirmationStatus === "confirmed") {
         setProcessing(false);
         setAmountToSend(null);
         setSendToAddress(null);
-    
-        getAccountTokens(); // Successfully confirmed, get the updated tokens
+
+        getAccountTokens();
       } else {
         console.log("Transaction failed to finalize");
       }
@@ -316,12 +272,12 @@ function WalletView({
       setAmountToSend(null);
       setSendToAddress(null);
     }
-    
+
   }
 
   async function getAccountTokens() {
     setFetching(true);
-    console.log(wallet,selectedChain);
+    console.log(wallet, selectedChain);
     const res = await axios.get(`http://localhost:3001/getTokens`, {
       params: {
         userAddress: wallet,

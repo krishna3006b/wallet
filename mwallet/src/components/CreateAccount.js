@@ -10,14 +10,9 @@ function CreateAccount({ setWallet, setSeedPhrase }) {
   const navigate = useNavigate();
 
   function generateWallet() {
-    // Generate a new Keypair
     const keypair = Keypair.generate();
-
     const secretKey = bs58.encode(keypair.secretKey);
     localStorage.setItem('privatekey', secretKey);
-    console.log(secretKey)
-
-
     setNewSeedPhrase(secretKey);
   }
 

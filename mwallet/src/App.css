@@ -96,6 +96,8 @@ header {
   min-height: 160px;
   padding: 5px;
   margin-top: 30px;
+  max-width: 100%;
+  word-wrap: break-word;  
 }
 
 .walletName {
@@ -141,4 +143,69 @@ header {
   width: 240px;
   object-fit: cover;
   border-radius: 10px;
+}.transaction-history-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.transaction-history-item {
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  padding: 15px;
+}
+
+.transaction-history-item:hover {
+  background-color: #f8f9fa;
+}
+
+.transaction-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sent-icon {
+  color: red;
+  margin-right: 10px;
+}
+
+.received-icon {
+  color: green;
+  margin-right: 10px;
+}
+
+.transaction-summary span {
+  font-size: 16px;
+  margin-right: 20px;
+}
+
+/* Dropdown that appears on click */
+.transaction-details-dropdown {
+  background-color: #f1f1f1;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  animation: fadeIn 0.3s ease;
+  max-width: 100%;
+  word-wrap: break-word; 
+}
+
+.transaction-details-dropdown p {
+  margin: 5px 0;
+  overflow-wrap: break-word;
+
+}
+
+/* Animation for smooth dropdown */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
